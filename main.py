@@ -91,19 +91,27 @@ def bresenham(line):
     y = start_point.y
     dx = abs(finish_point.x - start_point.x)
     dy = abs(finish_point.y - start_point.y)
-    e = 2 * dy - dx
     i = 0
+    e = None
     Plot(x, y, 'black')
     print(i, e, x, y)
-    while i < dx:
+    e = 2 * min(dy, dx) - max(dx, dy)
+    while i < max(dx, dy):
         if e >= 0:
-            y = y + 1*np.sign(finish_point.y - start_point.y)
-            e = e - 2 * dx
-        x = x + 1*np.sign(finish_point.x - start_point.x)
-        e = e + 2 * dy
+            if dx > dy:
+                y = y + 1*np.sign(finish_point.y - start_point.y)
+            else:
+                x = x + 1 * np.sign(finish_point.x - start_point.x)
+            e = e - 2 * max(dx, dy)
+        if dx > dy:
+            x = x + 1*np.sign(finish_point.x - start_point.x)
+        else:
+            y = y + 1 * np.sign(finish_point.y - start_point.y)
+        e_next = e + 2 * min(dy, dx)
         i = i + 1
         Plot(x, y, 'black')
-        print(i, e, x, y)
+        print(i, e, x, y, e_next)
+        e = e_next
     plt.plot([start_point.x, finish_point.x], [start_point.y, finish_point.y], 'c')
     plt.gca().set_aspect('equal')
     plt.show()
@@ -134,27 +142,42 @@ def woo(line):
         y = start_point.y
         dx = abs(finish_point.x - start_point.x)
         dy = abs(finish_point.y - start_point.y)
-        e = 2 * dy - dx
+        e = 2 * min(dy, dx) - max(dx, dy)
+        # e = 2 * dy - dx
         i = 0
         Plot(x, y, 'black')
-        while i < dx:
-            point1 = Point(x+1 * np.sign(finish_point.x - start_point.x), y)
-            point2 = Point(x+1 * np.sign(finish_point.x - start_point.x), y + 1 * np.sign(finish_point.y - start_point.y))
+        while i < max(dx, dy):
+            if dx > dy:
+                point1 = Point(x + 1 * np.sign(finish_point.x - start_point.x), y)
+                point2 = Point(x + 1 * np.sign(finish_point.x - start_point.x),
+                           y + 1 * np.sign(finish_point.y - start_point.y))
+            else:
+                point1 = Point(x, y + 1 * np.sign(finish_point.y - start_point.y))
+                point2 = Point(x + 1 * np.sign(finish_point.x - start_point.x),
+                               y + 1 * np.sign(finish_point.y - start_point.y))
             len1 = get_len(point1, line)
             len2 = get_len(point2, line)
             len = len1 + len2
-            color2 = round(len1/len, 1)
+            color2 = round(len1 / len, 1)
             color1 = round(1 - color2, 1)
             Plot(point1.x, point1.y, str(color2))
             Plot(point2.x, point2.y, str(color1))
             print(point1.x, point1.y, str(color2))
             print(point2.x, point2.y, str(color1))
             if e >= 0:
+                if dx > dy:
+                    y = y + 1 * np.sign(finish_point.y - start_point.y)
+                else:
+                    x = x + 1 * np.sign(finish_point.x - start_point.x)
+                e = e - 2 * max(dx, dy)
+            if dx > dy:
+                x = x + 1 * np.sign(finish_point.x - start_point.x)
+            else:
                 y = y + 1 * np.sign(finish_point.y - start_point.y)
-                e = e - 2 * dx
-            x = x + 1 * np.sign(finish_point.x - start_point.x)
-            e = e + 2 * dy
+            e_next = e + 2 * min(dy, dx)
             i = i + 1
+            print(i, e, x, y, e_next)
+            e = e_next
         plt.plot([start_point.x, finish_point.x], [start_point.y, finish_point.y], 'c')
         plt.gca().set_aspect('equal')
         plt.show()
@@ -165,5 +188,5 @@ if __name__ == "__main__":
     win = Window()
     win.show()
     sys.exit(app.exec_())'''
-    line = Line(Point(0, 0), Point(8, 2))
+    line = Line(Point(4, 28), Point(42, 11))
     woo(line)
