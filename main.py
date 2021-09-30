@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QAction
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QMenu
 from scipy.spatial.qhull import ConvexHull
+from sqlalchemy import false, true
 
 
 class Window(QMainWindow):
@@ -62,7 +63,7 @@ def Plot(x, y, color):
     plt.fill(pts[hull.vertices, 0], pts[hull.vertices, 1], color)
 
 
-def dda(line):
+def dda(line, debug):
     start_point = line.start_point
     finish_point = line.finish_point
     line_len = max(abs(finish_point.x - start_point.x), abs(finish_point.y - start_point.y))
@@ -71,20 +72,39 @@ def dda(line):
     x = start_point.x + 0.5 * np.sign(dx)
     y = start_point.y + 0.5 * np.sign(dy)
     i = 0
-    print(i, x, y, int(x), int(y))
+    if debug is true:
+        print('Шаг %s; x = %f; y = %f\n'
+              'Принимаем решение, что надо отразить пиксель (%s,%s)' % (i, x, y, int(x), int(y)))
     Plot(x, y, 'black')
-    while i < line_len:
-        x = x + dx
-        y = y + dy
-        i = i + 1
-        print(i, x, y, int(x), int(y))
-        Plot(x, y, 'black')
+    result = 0
+    if debug is true:
+        print('Введите 1, чтобы выполнить следующий шаг')
+        result = input()
+    if (debug is false) or (debug is true and int(result) == 1):
+        while i < line_len:
+            x = x + dx
+            y = y + dy
+            i = i + 1
+            Plot(x, y, 'black')
+            if debug is true and i < line_len and int(result) == 1:
+                print('Шаг %s; x = %f; y = %f\n'
+                      'Принимаем решение, что надо отразить пиксель (%s,%s)' % (i, x, y, int(x), int(y)))
+                print('Введите 1, чтобы выполнить следующий шаг')
+                result = input()
+            elif debug is true and line_len >= 1 and int(result) == 1:
+                print('Шаг %s; x = %f; y = %f\n'
+                      'Принимаем решение, что надо отразить пиксель (%s,%s)' % (i, x, y, int(x), int(y)))
+            elif debug is true and result != 1:
+                print('Вы прервали построение')
+                break;
+    else:
+        print('Вы прервали построение')
     plt.plot([start_point.x, finish_point.x], [start_point.y, finish_point.y], 'c')
     plt.gca().set_aspect('equal')
     plt.show()
 
 
-def bresenham(line):
+def bresenham(line, debug):
     start_point = line.start_point
     finish_point = line.finish_point
     x = start_point.x
@@ -93,25 +113,45 @@ def bresenham(line):
     dy = abs(finish_point.y - start_point.y)
     i = 0
     e = None
+    e_next = 2 * min(dy, dx) - max(dx, dy)
+    if debug is true:
+        print('Шаг %s; e = %s; x = %f; y = %f; Скорректированное значение ошибки e* = %s\n'
+              'Принимаем решение, что надо отразить пиксель (%s,%s)' % (i, e, x, y, e_next, int(x), int(y)))
     Plot(x, y, 'black')
-    print(i, e, x, y)
-    e = 2 * min(dy, dx) - max(dx, dy)
-    while i < max(dx, dy):
-        if e >= 0:
+    e = e_next
+    result = 0
+    if debug is true:
+        print('Введите 1, чтобы выполнить следующий шаг')
+        result = input()
+    if (debug is false) or (debug is true and int(result) == 1):
+        while i < max(dx, dy):
+            if e >= 0:
+                if dx > dy:
+                    y = y + 1 * np.sign(finish_point.y - start_point.y)
+                else:
+                    x = x + 1 * np.sign(finish_point.x - start_point.x)
+                e = e - 2 * max(dx, dy)
             if dx > dy:
-                y = y + 1*np.sign(finish_point.y - start_point.y)
-            else:
                 x = x + 1 * np.sign(finish_point.x - start_point.x)
-            e = e - 2 * max(dx, dy)
-        if dx > dy:
-            x = x + 1*np.sign(finish_point.x - start_point.x)
-        else:
-            y = y + 1 * np.sign(finish_point.y - start_point.y)
-        e_next = e + 2 * min(dy, dx)
-        i = i + 1
-        Plot(x, y, 'black')
-        print(i, e, x, y, e_next)
-        e = e_next
+            else:
+                y = y + 1 * np.sign(finish_point.y - start_point.y)
+            e_next = e + 2 * min(dy, dx)
+            i = i + 1
+            Plot(x, y, 'black')
+            if debug is true and i < max(dx, dy) and int(result) == 1:
+                print('Шаг %s; e = %s; x = %f; y = %f; Скорректированное значение ошибки e* = %s\n'
+                      'Принимаем решение, что надо отразить пиксель (%s,%s)' % (i, e, x, y, e_next, int(x), int(y)))
+                print('Введите 1, чтобы выполнить следующий шаг')
+                result = input()
+            elif debug is true and max(dx, dy) >= 1 and int(result) == 1:
+                print('Шаг %s; e = %s; x = %f; y = %f; Скорректированное значение ошибки e* = %s\n'
+                      'Принимаем решение, что надо отразить пиксель (%s,%s)' % (i, e, x, y, e_next, int(x), int(y)))
+            elif debug is true and result != 1:
+                print('Вы прервали построение')
+                break
+            e = e_next
+    else:
+        print('Вы прервали построение')
     plt.plot([start_point.x, finish_point.x], [start_point.y, finish_point.y], 'c')
     plt.gca().set_aspect('equal')
     plt.show()
@@ -131,7 +171,7 @@ def get_len(point, line):
     return dist
 
 
-def woo(line):
+def woo(line, debug):
     start_point = line.start_point
     finish_point = line.finish_point
     if start_point.x == finish_point.x or start_point.y == finish_point.y or abs(finish_point.y - start_point.y) == abs(
@@ -142,45 +182,119 @@ def woo(line):
         y = start_point.y
         dx = abs(finish_point.x - start_point.x)
         dy = abs(finish_point.y - start_point.y)
-        e = 2 * min(dy, dx) - max(dx, dy)
-        # e = 2 * dy - dx
         i = 0
+        e = None
+        e_next = 2 * min(dy, dx) - max(dx, dy)
+        if debug is true:
+            print('Шаг %s; e = %s; x = %f; y = %f; Скорректированное значение ошибки e* = %s\n'
+                  'Принимаем решение, что надо отразить пиксель (%s,%s) интенсивностью 100%%' % (
+                      i, e, x, y, e_next, int(x), int(y)))
+        e = e_next
         Plot(x, y, 'black')
-        while i < max(dx, dy):
-            if dx > dy:
-                point1 = Point(x + 1 * np.sign(finish_point.x - start_point.x), y)
-                point2 = Point(x + 1 * np.sign(finish_point.x - start_point.x),
-                           y + 1 * np.sign(finish_point.y - start_point.y))
-            else:
-                point1 = Point(x, y + 1 * np.sign(finish_point.y - start_point.y))
-                point2 = Point(x + 1 * np.sign(finish_point.x - start_point.x),
-                               y + 1 * np.sign(finish_point.y - start_point.y))
-            len1 = get_len(point1, line)
-            len2 = get_len(point2, line)
-            len = len1 + len2
-            color2 = round(len1 / len, 1)
-            color1 = round(1 - color2, 1)
-            Plot(point1.x, point1.y, str(color2))
-            Plot(point2.x, point2.y, str(color1))
-            print(point1.x, point1.y, str(color2))
-            print(point2.x, point2.y, str(color1))
-            if e >= 0:
+        result = 0
+        if debug is true:
+            print('Введите 1, чтобы выполнить следующий шаг')
+            result = input()
+        if (debug is false) or (debug is true and int(result) == 1):
+            while i < max(dx, dy):
                 if dx > dy:
-                    y = y + 1 * np.sign(finish_point.y - start_point.y)
+                    point1 = Point(x + 1 * np.sign(finish_point.x - start_point.x), y)
+                    point2 = Point(x + 1 * np.sign(finish_point.x - start_point.x),
+                                   y + 1 * np.sign(finish_point.y - start_point.y))
                 else:
+                    point1 = Point(x, y + 1 * np.sign(finish_point.y - start_point.y))
+                    point2 = Point(x + 1 * np.sign(finish_point.x - start_point.x),
+                                   y + 1 * np.sign(finish_point.y - start_point.y))
+                len1 = get_len(point1, line)
+                len2 = get_len(point2, line)
+                len = len1 + len2
+                color2 = round(len1 / len, 1)
+                color1 = round(1 - color2, 1)
+                Plot(point1.x, point1.y, str(color2))
+                Plot(point2.x, point2.y, str(color1))
+                if e >= 0:
+                    if dx > dy:
+                        y = y + 1 * np.sign(finish_point.y - start_point.y)
+                    else:
+                        x = x + 1 * np.sign(finish_point.x - start_point.x)
+                    e = e - 2 * max(dx, dy)
+                if dx > dy:
                     x = x + 1 * np.sign(finish_point.x - start_point.x)
-                e = e - 2 * max(dx, dy)
-            if dx > dy:
-                x = x + 1 * np.sign(finish_point.x - start_point.x)
-            else:
-                y = y + 1 * np.sign(finish_point.y - start_point.y)
-            e_next = e + 2 * min(dy, dx)
-            i = i + 1
-            print(i, e, x, y, e_next)
-            e = e_next
+                else:
+                    y = y + 1 * np.sign(finish_point.y - start_point.y)
+                e_next = e + 2 * min(dy, dx)
+                i = i + 1
+                if debug is true and i < max(dx, dy) and int(result) == 1:
+                    print('Шаг %s; e = %s; x = %f; y = %f; Скорректированное значение ошибки e* = %s\n'
+                          'Принимаем решение, что надо отразить пиксель (%s,%s) интенсивностью %s%% и пиксель (%s,'
+                          '%s) интенсивностью %s%%' % (
+                              i, e, x, y, e_next, point1.x, point1.y, (100 - float(str(color2))*100), point2.x, point2.y,
+                              (100 - float(str(color1))*100)))
+                    print('Введите 1, чтобы выполнить следующий шаг')
+                    result = input()
+                elif debug is true and max(dx, dy) >= 1 and int(result) == 1:
+                    print('Шаг %s; e = %s; x = %f; y = %f; Скорректированное значение ошибки e* = %s\n'
+                          'Принимаем решение, что надо отразить пиксель (%s,%s) интенсивностью %s%% и пиксель (%s,'
+                          '%s) интенсивностью %s%%' % (
+                              i, e, x, y, e_next, point1.x, point1.y, (100 - float(str(color2))*100), point2.x, point2.y,
+                              (100 - float(str(color1))*100)))
+                elif debug is true and int(result) != 1:
+                    print('Вы прервали построение')
+                    break
+                e = e_next
+        else:
+            print('Вы прервали построение')
         plt.plot([start_point.x, finish_point.x], [start_point.y, finish_point.y], 'c')
         plt.gca().set_aspect('equal')
         plt.show()
+
+
+def print_menu():
+    print('\n--------------Меню---------------\n'
+          '1. Построить отрезки\n'
+          '2. Отладочный режим\n'
+          '0. Выход')
+
+
+def algorithm_menu(debug):
+    print('\n1. Цифровой дифференциальный анализатор\n'
+          '2. Алгоритм Брезенхема\n'
+          '3. Алгоритм Ву\n'
+          '0. Выход в главное меню')
+    choice = int(input())
+    if choice == 1:
+        print('Введите координаты стартовой точки отрезка x и y через пробел')
+        x1, y1 = map(int, input().split())
+        print('Введите координаты конечной точки отрезка x и y через пробел')
+        x2, y2 = map(int, input().split())
+        dda(Line(Point(x1, y1), Point(x2, y2)), debug)
+    elif choice == 2:
+        print('Введите координаты стартовой точки отрезка x и y через пробел')
+        x1, y1 = map(int, input().split())
+        print('Введите координаты конечной точки отрезка x и y через пробел')
+        x2, y2 = map(int, input().split())
+        bresenham(Line(Point(x1, y1), Point(x2, y2)), debug)
+    elif choice == 3:
+        print('Введите координаты стартовой точки отрезка x и y через пробел')
+        x1, y1 = map(int, input().split())
+        print('Введите координаты конечной точки отрезка x и y через пробел')
+        x2, y2 = map(int, input().split())
+        woo(Line(Point(x1, y1), Point(x2, y2)), debug)
+    elif choice == 0:
+        menu()
+
+
+def menu():
+    x = 1
+    while x:
+        print_menu()
+        x = int(input())
+        if x == 1:
+            algorithm_menu(debug=false)
+        elif x == 2:
+            algorithm_menu(debug=true)
+        elif x == 0:
+            break;
 
 
 if __name__ == "__main__":
@@ -188,5 +302,4 @@ if __name__ == "__main__":
     win = Window()
     win.show()
     sys.exit(app.exec_())'''
-    line = Line(Point(4, 28), Point(42, 11))
-    woo(line)
+    menu()
