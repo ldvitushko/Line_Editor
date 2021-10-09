@@ -87,6 +87,7 @@ def bresenham(line, debug):
     if debug == 1:
         next_step_button.grid(row=7, column=0, columnspan=2, padx=5, pady=5)
     while i < max(dx, dy):
+        e_start = e
         if debug == 1:
             next_step_button.wait_variable(waitVar)
         if e >= 0:
@@ -103,7 +104,7 @@ def bresenham(line, debug):
         i = i + 1
         Plot(x, y, 'black')
         if debug == 1:
-            results.append((f'{i}', f'{e}', f'{x}', f'{y}', f'{e_next}', f'({int(x)};{int(y)})', 0, 0, 0))
+            results.append((f'{i}', f'{e_start}', f'{x}', f'{y}', f'{e_next}', f'({int(x)};{int(y)})', 0, 0, 0))
             tree.insert('', tk.END, values=last(results))
         e = e_next
     next_step_button.grid_forget()
@@ -150,6 +151,7 @@ def woo(line, debug):
         if debug == 1:
             next_step_button.grid(row=7, column=0, columnspan=2, padx=5, pady=5)
         while i < max(dx, dy):
+            e_start = e
             if debug == 1:
                 next_step_button.wait_variable(waitVar)
             if dx > dy:
@@ -180,7 +182,7 @@ def woo(line, debug):
             e_next = e + 2 * min(dy, dx)
             i = i + 1
             if debug == 1:
-                results.append((f'{i}', f'{e}', f'{x}', f'{y}', f'{e_next}', f'({point1.x};{point1.y})', f'{(100 - float(str(color2)) * 100)}%', f'({point2.x};{point2.y})', f'{(100 - float(str(color1)) * 100)}%'))
+                results.append((f'{i}', f'{e_start}', f'{x}', f'{y}', f'{e_next}', f'({point1.x};{point1.y})', f'{(100 - float(str(color2)) * 100)}%', f'({point2.x};{point2.y})', f'{(100 - float(str(color1)) * 100)}%'))
                 tree.insert('', tk.END, values=last(results))
             e = e_next
         next_step_button.grid_forget()
